@@ -55,19 +55,31 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                 ArrayList<TableDataInfo> tableDataInfoList = new ArrayList<>();
                 while (fieldResult.next()) {
                     String fieldDataType = fieldResult.getString(2);
-                    int filedLength = DataTypeEnum.VARCHAR.getLength();
-                    if (fieldDataType.matches("VARCHAR\\([0-9]*\\)")) {
+                    int filedLength = 0;
+                    if (fieldDataType.matches("(VARCHAR|CHAR)\\([0-9]*\\)")) {
                         filedLength = Integer.parseInt(fieldDataType.split("(\\(|\\))")[1]);
+                        if (filedLength == 0){
+                            filedLength = DataTypeEnum.VARCHAR.getLength();
+                        }
                         fieldDataType = "VARCHAR";
                     }
+                    // 这里属于V1版本，只生成指定整数长度的 DOUBLE 数
+                    if (fieldDataType.matches("DECIMAL\\([0-9]*,[0-9]*\\)")) {
+                        filedLength = Integer.parseInt(fieldDataType.split("(\\(|\\))")[1].split(",")[0]);
+                        if (filedLength == 0){
+                            filedLength = DataTypeEnum.DOUBLE.getLength();
+                        }
+                        fieldDataType = "DOUBLE";
+                    }
                     DataTypeEnum dataTypeEnum = DataTypeEnum.valueOf(fieldDataType);
+                    filedLength = dataTypeEnum.getLength();
                     String javaDataType = dataTypeEnum.getJavaDataType();
                     tableDataInfoList.add(new TableDataInfo());
                     loadDataService.dorisStreamLoad(feHost, feHttpPort, databaseName, tableName, totalNum, tableDataInfoList);
                     String result = combineData(javaDataType, filedLength);
+                    System.out.println("\t" + result);
                 }
                 fieldStatement.close();
-
             }
 
 
@@ -81,7 +93,7 @@ public class DataGenerateServiceImpl implements DataGenerateService {
         if (DataTypeEnum.TINYINT.getJavaDataType().equals(dataType)) {
             result += basicDataTypeRandom.getByte((byte) 0, Byte.MAX_VALUE);
         } else if (DataTypeEnum.SMALLINT.getJavaDataType().equals(dataType)) {
-            result += basicDataTypeRandom.getShort((short) 0, Byte.MAX_VALUE);
+            result += basicDataTypeRandom.getShort((short) 0, Short.MAX_VALUE);
         } else if (DataTypeEnum.INT.getJavaDataType().equals(dataType)) {
             result += basicDataTypeRandom.getInteger(0, Integer.MAX_VALUE);
         } else if (DataTypeEnum.BIGINT.getJavaDataType().equals(dataType)) {
@@ -92,13 +104,15 @@ public class DataGenerateServiceImpl implements DataGenerateService {
             result += complexDataTypeRandom.getRandomDate(0, "1949-10-01", "2022-12-31");
         } else if (DataTypeEnum.STRING.getJavaDataType().equals(dataType)) {
             for (int i = 0; i < filedLength; i++) {
-                result += stringBuilder.append(basicDataTypeRandom.getChar());
+                stringBuilder.append(basicDataTypeRandom.getChar());
             }
+            result = stringBuilder.toString();
             stringBuilder.delete(0, filedLength);
         } else if (DataTypeEnum.VARCHAR.getJavaDataType().equals(dataType)) {
             for (int i = 0; i < filedLength; i++) {
-                result += stringBuilder.append(basicDataTypeRandom.getChar());
+                stringBuilder.append(basicDataTypeRandom.getChar());
             }
+            result = stringBuilder.toString();
             stringBuilder.delete(0, filedLength);
         } else if (DataTypeEnum.BOOLEAN.getJavaDataType().equals(dataType)) {
             result += basicDataTypeRandom.getBoolean();

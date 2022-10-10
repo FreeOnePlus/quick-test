@@ -2,8 +2,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password:
+    password: Syj123456
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://doris-test.freeoneplus.com/:3306?quick_test
+    url: jdbc:mysql://doris-test.freeoneplus.com:3306?quick_test
 server:
   port: 8088

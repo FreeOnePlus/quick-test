@@ -26,9 +26,13 @@ public class DorisTest {
                 String fieldName = fieldResult.getString(1);
                 String fieldDataType = fieldResult.getString(2);
                 int filedLength = DataTypeEnum.VARCHAR.getLength();
-                if (fieldDataType.matches("VARCHAR\\([0-9]*\\)")){
+                if (fieldDataType.matches("(VARCHAR|CHAR)\\([0-9]*\\)")){
                     filedLength = Integer.parseInt(fieldDataType.split("(\\(|\\))")[1]);
                     fieldDataType = "VARCHAR";
+                }
+                if (fieldDataType.matches("DECIMAL\\([0-9]*,[0-9]*\\)")) {
+                    filedLength = Integer.parseInt(fieldDataType.split("(\\(|\\))")[1].split(",")[0]);
+                    fieldDataType = "DOUBLE";
                 }
                 DataTypeEnum dataTypeEnum = DataTypeEnum.valueOf(fieldDataType);
                 String dorisDataType = dataTypeEnum.getDorisDataType();

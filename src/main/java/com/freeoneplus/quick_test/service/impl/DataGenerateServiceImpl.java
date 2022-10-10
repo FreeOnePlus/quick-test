@@ -72,7 +72,9 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                         fieldDataType = "DOUBLE";
                     }
                     DataTypeEnum dataTypeEnum = DataTypeEnum.valueOf(fieldDataType);
-                    filedLength = dataTypeEnum.getLength();
+                    if (filedLength == 0){
+                        filedLength = dataTypeEnum.getLength();
+                    }
                     String javaDataType = dataTypeEnum.getJavaDataType();
                     tableDataInfoList.add(new TableDataInfo());
                     loadDataService.dorisStreamLoad(feHost, feHttpPort, databaseName, tableName, totalNum, tableDataInfoList);

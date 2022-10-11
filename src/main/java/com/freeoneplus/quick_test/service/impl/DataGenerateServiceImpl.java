@@ -123,9 +123,8 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                     dataList.clear();
                 }
             }
-
         }
-        return false;
+        return true;
     }
 
     private String combineData(String dataType, int filedLength) {

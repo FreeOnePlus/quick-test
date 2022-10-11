@@ -18,8 +18,11 @@ public class QuickTestController {
     @RequestMapping("/test")
     public void test() {
         ArrayList<TableDataInfo> list = new ArrayList<>();
-        list.add(new TableDataInfo("tb_td_app", 1000000L));
-        dataGenerateService.analysisSchemaGenerateData(new BaseSchemaInfo("test", "storage.freeoneplus.com",
-                9030,"storage.freeoneplus.com", 8040, "root", ""), list);
+        list.add(new TableDataInfo("tb_td_app", 10000000L));
+        long start = System.currentTimeMillis();
+        dataGenerateService.analysisSchemaGenerateData(new BaseSchemaInfo("test", "192.168.31.241",
+                9030,"192.168.31.241", 8040, "root", ""), list);
+        long end = System.currentTimeMillis();
+        System.out.println("共耗时：" + (end - start) / 1000 + "秒");
     }
 }

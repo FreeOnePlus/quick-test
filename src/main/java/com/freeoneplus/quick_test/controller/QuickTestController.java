@@ -20,6 +20,6 @@ public class QuickTestController {
         ArrayList<TableDataInfo> list = new ArrayList<>();
         list.add(new TableDataInfo("tb_td_app", 1000000L));
         dataGenerateService.analysisSchemaGenerateData(new BaseSchemaInfo("test", "storage.freeoneplus.com",
-                8040, "root", ""), list);
+                9030,"storage.freeoneplus.com", 8040, "root", ""), list);
     }
 }

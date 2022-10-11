@@ -9,8 +9,18 @@ import lombok.*;
 @AllArgsConstructor
 public class BaseSchemaInfo {
     private String dbName;
-    private String host;
-    private int port = 8040;
+    private String feHost;
+    private int fePort = 8030;
+    private String beHost;
+    private int bePort = 9030;
     private String username = "root";
     private String password = "";
+
+    public BaseSchemaInfo(String dbName, String feHost, int fePort, String username, String password) {
+        this.dbName = dbName;
+        this.feHost = feHost;
+        this.fePort = fePort;
+        this.username = username;
+        this.password = password;
+    }
 }

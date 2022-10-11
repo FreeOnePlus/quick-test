@@ -41,10 +41,10 @@ public class SchemaServiceImpl implements SchemaService {
     @Override
     public void analysisUrlSchema(UrlSchemaInfo urlSchemaInfo) {
         String dbName = urlSchemaInfo.getDbName();
-        String host = urlSchemaInfo.getHost();
+        String host = urlSchemaInfo.getFeHost();
         String username = urlSchemaInfo.getUsername();
         String password = urlSchemaInfo.getPassword();
-        int httpPort = urlSchemaInfo.getPort();
+        int httpPort = urlSchemaInfo.getFePort();
         List<TableDataInfo> tableList = urlSchemaInfo.getTableList();
         dataGenerateService.analysisSchemaGenerateData(new BaseSchemaInfo(dbName, host, httpPort, username, password), tableList);
     }

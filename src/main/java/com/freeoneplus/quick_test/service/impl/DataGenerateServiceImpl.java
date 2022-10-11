@@ -44,13 +44,14 @@ public class DataGenerateServiceImpl implements DataGenerateService {
      * @param jsonFileSchemaTableInfoList
      */
     @Override
-    public void analysisSchemaGenerateData(String databaseName, String csvFilePath, String userName, String password, List<JsonFileSchemaTableInfo> jsonFileSchemaTableInfoList) {
+    public void analysisSchemaGenerateData(String databaseName, String csvFilePath, String userName, String password,
+                                           List<JsonFileSchemaTableInfo> jsonFileSchemaTableInfoList) {
         // TODO 本地 CSV 格式 V1 版本暂且不开发，主要满足直接对接 Doris 集群造数的能力
     }
 
     @Override
     public void analysisSchemaGenerateData(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableEntry) {
-        Connection dorisSchema = dorisMapper.getDorisSchema(baseSchemaInfo.getHost(), baseSchemaInfo.getPort(),
+        Connection dorisSchema = dorisMapper.getDorisSchema(baseSchemaInfo.getFeHost(), baseSchemaInfo.getFePort(),
                 baseSchemaInfo.getDbName(), baseSchemaInfo.getUsername(), baseSchemaInfo.getPassword());
         try {
             // 循环获取想要造数的表信息
@@ -117,11 +118,10 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                 }
                 sb.deleteCharAt(sb.length() - 1);
                 dataList.add(sb.toString());
-                if (dataList.size() == 100000 || totalNum == i) {
+                if (dataList.size() == 100000 || totalNum == i + 1) {
                     loadDataService.dorisCsvStreamLoad(baseSchemaInfo, tableName, dataList);
                     dataList.clear();
                 }
-                // Stream Load 写入
             }
 
         }

@@ -95,9 +95,10 @@ public class LoadDataServiceImpl implements LoadDataService {
      * @throws Exception
      */
     public boolean loadCsv(BaseSchemaInfo baseSchemaInfo, String tableName, ArrayList<String> dataList) throws Exception {
+        // TODO 这里后续需要处理一下如果只有FE，那么在内网环境下自动转发为BE host 及 port 的逻辑
         try (CloseableHttpClient client = httpClientBuilder.build()) {
             String loadUrl = String.format("http://%s:%s/api/%s/%s/_stream_load",
-                    baseSchemaInfo.getHost(), baseSchemaInfo.getPort(), baseSchemaInfo.getDbName(), tableName);
+                    baseSchemaInfo.getBeHost(), baseSchemaInfo.getBePort(), baseSchemaInfo.getDbName(), tableName);
             HttpPut put = new HttpPut(loadUrl);
             put.removeHeaders(HttpHeaders.CONTENT_LENGTH);
             put.removeHeaders(HttpHeaders.TRANSFER_ENCODING);
@@ -120,7 +121,7 @@ public class LoadDataServiceImpl implements LoadDataService {
                     log.error(String.format("Stream load failed. status: %s load result: %s", statusCode, loadResult));
                     return false;
                 }
-                log.info("Get load result: " + loadResult);
+                log.info("Get load result:\n " + loadResult);
                 return true;
             }
         }

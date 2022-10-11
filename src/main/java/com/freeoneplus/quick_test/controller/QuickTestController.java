@@ -1,5 +1,6 @@
 package com.freeoneplus.quick_test.controller;
 
+import com.freeoneplus.quick_test.pojo.BaseSchemaInfo;
 import com.freeoneplus.quick_test.pojo.TableDataInfo;
 import com.freeoneplus.quick_test.service.DataGenerateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +16,10 @@ public class QuickTestController {
     DataGenerateService dataGenerateService;
 
     @RequestMapping("/test")
-    public void test(){
+    public void test() {
         ArrayList<TableDataInfo> list = new ArrayList<>();
-        list.add(new TableDataInfo("tb_td_app",1000L));
-        dataGenerateService.analysisSchemaGenerateData("test","storage.freeoneplus.com",
-                9030,"root","",list);
+        list.add(new TableDataInfo("tb_td_app", 1000000L));
+        dataGenerateService.analysisSchemaGenerateData(new BaseSchemaInfo("test", "storage.freeoneplus.com",
+                8040, "root", ""), list);
     }
 }

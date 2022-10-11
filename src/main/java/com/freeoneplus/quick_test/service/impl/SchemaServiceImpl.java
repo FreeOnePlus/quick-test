@@ -1,10 +1,7 @@
 package com.freeoneplus.quick_test.service.impl;
 
 import com.freeoneplus.quick_test.common.JsonFileSchemaInit;
-import com.freeoneplus.quick_test.pojo.TableDataInfo;
-import com.freeoneplus.quick_test.pojo.JsonFileSchemaDatabaseInfo;
-import com.freeoneplus.quick_test.pojo.JsonFileSchemaTableInfo;
-import com.freeoneplus.quick_test.pojo.UrlSchemaInfo;
+import com.freeoneplus.quick_test.pojo.*;
 import com.freeoneplus.quick_test.service.DataGenerateService;
 import com.freeoneplus.quick_test.service.SchemaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,12 +41,12 @@ public class SchemaServiceImpl implements SchemaService {
     @Override
     public void analysisUrlSchema(UrlSchemaInfo urlSchemaInfo) {
         String dbName = urlSchemaInfo.getDbName();
-        String feHost = urlSchemaInfo.getFeHost();
+        String host = urlSchemaInfo.getHost();
         String username = urlSchemaInfo.getUsername();
         String password = urlSchemaInfo.getPassword();
-        int feHttpPort = urlSchemaInfo.getFeHttpPort();
+        int httpPort = urlSchemaInfo.getPort();
         List<TableDataInfo> tableList = urlSchemaInfo.getTableList();
-        dataGenerateService.analysisSchemaGenerateData(dbName, feHost, feHttpPort, username, password, tableList);
+        dataGenerateService.analysisSchemaGenerateData(new BaseSchemaInfo(dbName, host, httpPort, username, password), tableList);
     }
 
 

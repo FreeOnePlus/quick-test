@@ -3,12 +3,14 @@ package com.freeoneplus.quick_test.service.impl;
 import com.freeoneplus.quick_test.common.BasicDataTypeRandom;
 import com.freeoneplus.quick_test.common.ComplexDataTypeRandom;
 import com.freeoneplus.quick_test.dao.DorisMapper;
+import com.freeoneplus.quick_test.pojo.BaseSchemaInfo;
 import com.freeoneplus.quick_test.pojo.FieldDataTypeInfo;
 import com.freeoneplus.quick_test.pojo.TableDataInfo;
 import com.freeoneplus.quick_test.pojo.JsonFileSchemaTableInfo;
 import com.freeoneplus.quick_test.pojo.enums.DataTypeEnum;
 import com.freeoneplus.quick_test.service.DataGenerateService;
 import com.freeoneplus.quick_test.service.LoadDataService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class DataGenerateServiceImpl implements DataGenerateService {
 
@@ -33,32 +36,38 @@ public class DataGenerateServiceImpl implements DataGenerateService {
     @Autowired
     LoadDataService loadDataService;
 
+    /**
+     * @param databaseName
+     * @param csvFilePath
+     * @param userName
+     * @param password
+     * @param jsonFileSchemaTableInfoList
+     */
     @Override
     public void analysisSchemaGenerateData(String databaseName, String csvFilePath, String userName, String password, List<JsonFileSchemaTableInfo> jsonFileSchemaTableInfoList) {
-        for (JsonFileSchemaTableInfo jsonFileSchemaTableInfo : jsonFileSchemaTableInfoList) {
-            int csvNum = jsonFileSchemaTableInfo.getCsvNum();
-            for (int i = 0; i < csvNum; i++) {
-
-            }
-        }
+        // TODO 本地 CSV 格式 V1 版本暂且不开发，主要满足直接对接 Doris 集群造数的能力
     }
 
     @Override
-    public void analysisSchemaGenerateData(String databaseName, String feHost, int feHttpPort, String userName, String password, List<TableDataInfo> tableEntry) {
-        Connection dorisSchema = dorisMapper.getDorisSchema(feHost, feHttpPort, databaseName, userName, password);
+    public void analysisSchemaGenerateData(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableEntry) {
+        Connection dorisSchema = dorisMapper.getDorisSchema(baseSchemaInfo.getHost(), baseSchemaInfo.getPort(),
+                baseSchemaInfo.getDbName(), baseSchemaInfo.getUsername(), baseSchemaInfo.getPassword());
         try {
+            // 循环获取想要造数的表信息
+            // TODO 需不需要事物管理，需要考虑
+            List<TableDataInfo> tableDataInfoList = new ArrayList<>();
             for (TableDataInfo tableDataInfo : tableEntry) {
                 String tableName = tableDataInfo.getTableName();
-                Long totalNum = tableDataInfo.getTotalNum();
                 Statement fieldStatement = dorisSchema.createStatement();
                 ResultSet fieldResult = fieldStatement.executeQuery("DESC " + tableName);
-                ArrayList<TableDataInfo> tableDataInfoList = new ArrayList<>();
+                List<FieldDataTypeInfo> fieldDataTypeInfoList = new ArrayList<>();
+                int count = 0;
                 while (fieldResult.next()) {
                     String fieldDataType = fieldResult.getString(2);
                     int filedLength = 0;
                     if (fieldDataType.matches("(VARCHAR|CHAR)\\([0-9]*\\)")) {
                         filedLength = Integer.parseInt(fieldDataType.split("(\\(|\\))")[1]);
-                        if (filedLength == 0){
+                        if (filedLength == 0) {
                             filedLength = DataTypeEnum.VARCHAR.getLength();
                         }
                         fieldDataType = "VARCHAR";
@@ -66,28 +75,57 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                     // 这里属于V1版本，只生成指定整数长度的 DOUBLE 数
                     if (fieldDataType.matches("DECIMAL\\([0-9]*,[0-9]*\\)")) {
                         filedLength = Integer.parseInt(fieldDataType.split("(\\(|\\))")[1].split(",")[0]);
-                        if (filedLength == 0){
+                        if (filedLength == 0) {
                             filedLength = DataTypeEnum.DOUBLE.getLength();
                         }
                         fieldDataType = "DOUBLE";
                     }
                     DataTypeEnum dataTypeEnum = DataTypeEnum.valueOf(fieldDataType);
-                    if (filedLength == 0){
+                    if (filedLength == 0) {
                         filedLength = dataTypeEnum.getLength();
                     }
                     String javaDataType = dataTypeEnum.getJavaDataType();
-                    tableDataInfoList.add(new TableDataInfo());
-                    loadDataService.dorisStreamLoad(feHost, feHttpPort, databaseName, tableName, totalNum, tableDataInfoList);
-                    String result = combineData(javaDataType, filedLength);
-                    System.out.println("\t" + result);
+                    fieldDataTypeInfoList.add(count++, new FieldDataTypeInfo(javaDataType, filedLength));
                 }
+                tableDataInfo.setFieldDataTypeInfoList(fieldDataTypeInfoList);
+                tableDataInfoList.add(tableDataInfo);
                 fieldStatement.close();
             }
-
-
+            boolean status = combineDataController(baseSchemaInfo, tableDataInfoList);
+            if (status == false) {
+                log.error("导入错误！任务终止！");
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean combineDataController(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableDataInfoList) {
+        ArrayList<String> dataList = new ArrayList<>();
+        for (TableDataInfo dataInfo : tableDataInfoList) {
+            // 该表的需要造数数据量
+            Long totalNum = dataInfo.getTotalNum();
+            String tableName = dataInfo.getTableName();
+            for (int i = 0; i < totalNum; i++) {
+                StringBuilder sb = new StringBuilder();
+                // 字段集合生成数据
+                for (FieldDataTypeInfo fieldDataTypeInfo : dataInfo.getFieldDataTypeInfoList()) {
+                    String fieldType = fieldDataTypeInfo.getFieldType();
+                    int length = fieldDataTypeInfo.getLength();
+                    String result = combineData(fieldType, length);
+                    sb.append(result).append(",");
+                }
+                sb.deleteCharAt(sb.length() - 1);
+                dataList.add(sb.toString());
+                if (dataList.size() == 100000 || totalNum == i) {
+                    loadDataService.dorisCsvStreamLoad(baseSchemaInfo, tableName, dataList);
+                    dataList.clear();
+                }
+                // Stream Load 写入
+            }
+
+        }
+        return false;
     }
 
     private String combineData(String dataType, int filedLength) {

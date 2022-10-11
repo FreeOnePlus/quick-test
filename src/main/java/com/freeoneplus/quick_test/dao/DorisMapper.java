@@ -10,10 +10,10 @@ import java.util.Properties;
 @Component
 public class DorisMapper {
 
-    public Connection getDorisSchema(String feHost, int feHttpPort, String dbName,String username, String password) {
+    public Connection getDorisSchema(String host, int port, String dbName,String username, String password) {
         Properties properties = new Properties();
         properties.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
-        properties.setProperty("url", "jdbc:mysql://" + feHost + ":" + feHttpPort + "/" + dbName);
+        properties.setProperty("url", "jdbc:mysql://" + host + ":" + port + "/" + dbName);
         properties.setProperty("username", username);
         properties.setProperty("password", password);
         try {

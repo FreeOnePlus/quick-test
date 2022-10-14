@@ -123,7 +123,6 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                     dataList.clear();
                 }
             }
-
         }
         return true;
     }

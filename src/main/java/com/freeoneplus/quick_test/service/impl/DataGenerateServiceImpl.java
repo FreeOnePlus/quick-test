@@ -125,7 +125,7 @@ public class DataGenerateServiceImpl implements DataGenerateService {
             }
 
         }
-        return false;
+        return true;
     }
 
     private String combineData(String dataType, int filedLength) {

@@ -10,9 +10,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class QuickTestApplication {
 
     public static void main(String[] args) {
-        ConfigurableApplicationContext run = SpringApplication.run(QuickTestApplication.class, args);
-        QuickTestController bean = run.getBean(QuickTestController.class);
-        bean.test();
+        SpringApplication.run(QuickTestApplication.class, args);
     }
 
 }

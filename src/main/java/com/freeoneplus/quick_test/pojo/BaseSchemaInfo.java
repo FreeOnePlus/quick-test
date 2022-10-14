@@ -23,4 +23,5 @@ public class BaseSchemaInfo {
         this.username = username;
         this.password = password;
     }
+
 }

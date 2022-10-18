@@ -34,8 +34,9 @@ public class QuickTestController {
                 "FE-Port：" + webBaseSchemaInfo.getFePort() + "\n" +
                 "BE-Port：" + webBaseSchemaInfo.getBePort() + "\n" +
                 "用户名：" + webBaseSchemaInfo.getUsername() + "\n" +
-                "用户密码：" + webBaseSchemaInfo.getUsername() + "\n" +
-                "造数总数："  + webBaseSchemaInfo.getTotalNum());
+                "用户密码：" + webBaseSchemaInfo.getPassword() + "\n" +
+                "造数总数："  + webBaseSchemaInfo.getTotalNum() + "\n" +
+                "单次导入量：" + webBaseSchemaInfo.getSingleDataVolume());
         dataGenerateService.analysisSchemaGenerateData(
                 new BaseSchemaInfo(
                         webBaseSchemaInfo.getDbName(),
@@ -44,7 +45,8 @@ public class QuickTestController {
                         webBaseSchemaInfo.getBeHost(),
                         webBaseSchemaInfo.getBePort(),
                         webBaseSchemaInfo.getUsername(),
-                        webBaseSchemaInfo.getPassword()),
+                        webBaseSchemaInfo.getPassword(),
+                        webBaseSchemaInfo.getSingleDataVolume()),
                         list
         );
         log.info("-------------------------造数结束-------------------------");

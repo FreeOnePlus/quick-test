@@ -50,7 +50,7 @@ public class DataGenerateServiceImpl implements DataGenerateService {
     }
 
     @Override
-    public void analysisSchemaGenerateData(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableEntry) {
+    public boolean analysisSchemaGenerateData(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableEntry) {
         Connection dorisSchema = dorisMapper.getDorisSchema(baseSchemaInfo.getFeHost(), baseSchemaInfo.getFePort(),
                 baseSchemaInfo.getDbName(), baseSchemaInfo.getUsername(), baseSchemaInfo.getPassword());
         try {
@@ -95,10 +95,13 @@ public class DataGenerateServiceImpl implements DataGenerateService {
             boolean status = combineDataController(baseSchemaInfo, tableDataInfoList);
             if (status == false) {
                 log.error("导入错误！任务终止！");
+                return false;
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     private boolean combineDataController(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableDataInfoList) {
@@ -118,7 +121,7 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                 }
                 sb.deleteCharAt(sb.length() - 1);
                 dataList.add(sb.toString());
-                if (dataList.size() == 100000 || totalNum == i + 1) {
+                if (dataList.size() == baseSchemaInfo.getSingleDataVolume() || totalNum == i + 1) {
                     loadDataService.dorisCsvStreamLoad(baseSchemaInfo, tableName, dataList);
                     dataList.clear();
                 }

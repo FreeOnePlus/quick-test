@@ -17,12 +17,18 @@ import org.springframework.stereotype.Service;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 public class DataGenerateServiceImpl implements DataGenerateService {
 
     private StringBuilder stringBuilder = new StringBuilder();
+
+    private int cacheFieldLength = 0;
+    private String cacheFieldStrDouble = "1";
 
     @Autowired
     DorisMapper dorisMapper;
@@ -62,6 +68,7 @@ public class DataGenerateServiceImpl implements DataGenerateService {
                 Statement fieldStatement = dorisSchema.createStatement();
                 ResultSet fieldResult = fieldStatement.executeQuery("DESC " + tableName);
                 List<FieldDataTypeInfo> fieldDataTypeInfoList = new ArrayList<>();
+                List<Object> partitionList = getPartitionList(dorisSchema, tableName);
                 int count = 0;
                 while (fieldResult.next()) {
                     String fieldDataType = fieldResult.getString(2);
@@ -102,6 +109,30 @@ public class DataGenerateServiceImpl implements DataGenerateService {
             return false;
         }
         return true;
+    }
+
+    private List<Object> getPartitionList(Connection dorisSchema, String tableName) throws SQLException {
+        Statement statement = dorisSchema.createStatement();
+        ResultSet resultSet = statement.executeQuery("SHOW PARTITION FROM " + tableName);
+        String createTable = resultSet.getString("Create Table");
+        createTable = createTable.toLowerCase(Locale.ROOT);
+        if (createTable.matches(".*partition by range.*")) {
+            return analysisPartitionList(createTable, "range");
+        } else if (createTable.matches(".*partition by list.*")) {
+            return analysisPartitionList(createTable, "list");
+        } else {
+            return null;
+        }
+    }
+
+    private List<Object> analysisPartitionList(String createTableMsg, String type) {
+        Pattern pattern = Pattern.compile("");
+        Matcher matcher = pattern.matcher(createTableMsg);
+        while (matcher.find()) {
+            String group = matcher.group();
+            System.out.println(group);
+        }
+        return null;
     }
 
     private boolean combineDataController(BaseSchemaInfo baseSchemaInfo, List<TableDataInfo> tableDataInfoList) {
@@ -159,9 +190,35 @@ public class DataGenerateServiceImpl implements DataGenerateService {
         } else if (DataTypeEnum.BOOLEAN.getJavaDataType().equals(dataType)) {
             result += basicDataTypeRandom.getBoolean();
         } else if (DataTypeEnum.DOUBLE.getJavaDataType().equals(dataType)) {
-            result += basicDataTypeRandom.getDouble(0, Double.MAX_VALUE, 2);
+            String strDouble = "1";
+            // 做一次缓存，减少重复计算量
+            if (filedLength == cacheFieldLength) {
+                strDouble = cacheFieldStrDouble;
+            } else {
+                if (filedLength > 14) {
+                    filedLength = 14;
+                }
+                for (int i = 0; i < filedLength; i++) {
+                    strDouble += "0";
+                }
+                cacheFieldStrDouble = strDouble;
+                cacheFieldLength = filedLength;
+            }
+            result += basicDataTypeRandom.getDouble(0, Double.parseDouble(strDouble), 100);
         } else if (DataTypeEnum.FLOAT.getJavaDataType().equals(dataType)) {
-            result += basicDataTypeRandom.getFloat(0, Float.MAX_VALUE, 2);
+            String strDouble = "1";
+            // 做一次缓存，减少重复计算量
+            if (filedLength == cacheFieldLength) {
+                strDouble = cacheFieldStrDouble;
+            } else {
+                for (int i = 0; i < filedLength; i++) {
+                    strDouble += "0";
+                }
+                cacheFieldStrDouble = strDouble;
+                cacheFieldLength = filedLength;
+            }
+
+            result += basicDataTypeRandom.getDouble(0, Double.parseDouble(strDouble), 100);
         }
         return result;
     }

@@ -25,6 +25,7 @@ public class QuickTestController {
         log.info("-------------------------开始造数-------------------------");
         TableDataInfo dataInfo = new TableDataInfo(webBaseSchemaInfo.getTableName(), webBaseSchemaInfo.getTotalNum());
         ArrayList<TableDataInfo> list = new ArrayList<>();
+        long begin = System.currentTimeMillis();
         list.add(dataInfo);
         log.info("造数信息如下：" + "\n" +
                 "数据库：" + webBaseSchemaInfo.getDbName() + "\n" +
@@ -49,6 +50,8 @@ public class QuickTestController {
                         webBaseSchemaInfo.getSingleDataVolume()),
                         list
         );
+        long end = System.currentTimeMillis();
         log.info("-------------------------造数结束-------------------------");
+        log.info("共累计消耗：" + (end - begin) / 1000 + "秒");
     }
 }
